@@ -9,8 +9,8 @@
     "icon:linux": "electron-icon-builder --input=src/icon-windows.png --output=release --platform=linux",
     "icons": "npm run icon:win && npm run icon:mac && npm run icon:linux",
     "start": "npm run sass && electron .",
-    "sass": "sass src/app.scss app.css --no-source-map --style=compressed",
-    "watch:sass": "sass --watch src/app.scss:app.css --no-source-map",
+    "sass": "sass src/styles/app.scss app.css --no-source-map --style=compressed",
+    "watch:sass": "sass --watch src/styles/app.scss:app.css --no-source-map",
     "build": "electron-builder --dir",
     "dist": "electron-builder --publish never"
   },

@@ -1,0 +1,38 @@
+:root,
+[data-theme="light"] {
+  --title-bar-height: 40px;
+  --background-color: #f6f6f6;
+  --text-color: #171717;
+  --border-color: #767676;
+  --container-color: #ffffff;
+  --titlebar-background: #ffffff;
+  --spinner-background-color: #e6e6e6;
+  --border-dragover-color: #000;
+  --file-type-1: #acacac;
+  --file-type-2: #307cf1;
+  --file-type-3: #0f9d58;
+  --file-type-4: #d24726;
+  --file-type-5: #e13d34;
+  --file-type-6: #5eb533;
+  --file-type-7: #8e44ad;
+  --file-type-8: #7a3ce7;
+  --file-type-9: #f4b400;
+}
+
+[data-theme="dark"] {
+    --background-color: #000;
+    --text-color: #e6e6ed;
+    --border-color: #676767;
+    --container-color: #242424;
+    --titlebar-background: #1d1d1d;
+    --border-dragover-color: #ffffff;
+    --file-type-1: #cfcfcf; /* Neutral gray – slightly lighter for dark mode */
+    --file-type-2: #539dff; /* Blue – brighter and softer for contrast */
+    --file-type-3: #34e28a; /* Green – more neon-like to stand out */
+    --file-type-4: #ff6b4a; /* Burnt orange – more vivid */
+    --file-type-5: #ff5c5c; /* Red – brighter to avoid blending into dark */
+    --file-type-6: #a8e84e; /* Lime green – vibrant on dark */
+    --file-type-7: #be7efc; /* Purple – softened and more readable */
+    --file-type-8: #a68bff; /* Violet – muted but still bold */
+    --file-type-9: #ffd54f; /* Yellow – warm and not too bright */
+}

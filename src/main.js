@@ -11,6 +11,7 @@ function createWindow() {
   win = new BrowserWindow({
     width: 800,
     height: 600,
+    maximizable: false,
     titleBarStyle: 'hidden',
     icon: isMac ? undefined : path.join(__dirname, 'icon-windows.png'),
     trafficLightPosition: { x: 10, y: 11 },

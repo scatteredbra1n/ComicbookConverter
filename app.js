@@ -19,20 +19,30 @@
         window.api.closeWindow();
       }
     }
-    
+
+    const applyTheme = () => {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.body.dataset.theme = isDark ? 'dark' : 'light';
+    };
+
+    // Apply on load
+    applyTheme();
+
+    // Listen for changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 
     dropZone.addEventListener('dragover', (e) => {
       e.preventDefault();
-      dropZone.style.borderColor = '#00f';
+      dropZone.classList.add("action-dragover");
     });
 
     dropZone.addEventListener('dragleave', () => {
-      dropZone.style.borderColor = '#888';
+      dropZone.classList.remove("action-dragover");
     });
 
     dropZone.addEventListener('drop', async (e) => {
       e.preventDefault();
-      dropZone.style.borderColor = '#888';
+      dropZone.classList.remove("action-dragover");
       const paths = [...e.dataTransfer.files].map(f => f.path);
       validFiles = await window.api.validateCBRs(paths);
       convertBtn.disabled = validFiles.length === 0;
@@ -48,6 +58,7 @@
         html += `</tbody></table>`;
         fileList.innerHTML = html;
         document.querySelector(".drag-and-drop").style.display = "none";
+        document.querySelector("#reset-btn").style.display = "block";
         document.querySelector(".file-count").innerHTML = `${validFiles.length} files`;
       } else {
         fileList.textContent = 'No valid RAR4 CBR files detected.';
@@ -72,6 +83,7 @@
 
     window.api.onComplete(() => {
       progress.textContent = '✅ Conversion complete!';
+      document.querySelector("#reset-btn").textContent = "Convert more";
     });
 
     window.api.onFileStatus(({ index, status }) => {
