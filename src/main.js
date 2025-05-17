@@ -4,12 +4,15 @@ const fs = require('fs');
 const { createExtractorFromData } = require('node-unrar-js');
 const archiver = require('archiver');
 
+const isMac = process.platform === 'darwin';
 let win; 
+
 function createWindow() {
   win = new BrowserWindow({
     width: 800,
     height: 600,
     titleBarStyle: 'hidden',
+    icon: isMac ? undefined : path.join(__dirname, 'icon-windows.png'),
     trafficLightPosition: { x: 10, y: 11 },
     resizable: false,
     webPreferences: {

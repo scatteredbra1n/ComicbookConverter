@@ -4,18 +4,56 @@
   "description": "Electron app to convert CBR (RAR4) files to CBZ format",
   "main": "src/main.js",
   "scripts": {
+    "icon:win": "electron-icon-builder --input=src/icon-windows.png --output=release --platform=win",
+    "icon:mac": "electron-icon-builder --input=src/icon-mac.png --output=release --platform=mac",
+    "icon:linux": "electron-icon-builder --input=src/icon-windows.png --output=release --platform=linux",
+    "icons": "npm run icon:win && npm run icon:mac && npm run icon:linux",
     "start": "npm run sass && electron .",
     "sass": "sass src/app.scss app.css --no-source-map --style=compressed",
-    "watch:sass": "sass --watch src/app.scss:app.css --no-source-map"
+    "watch:sass": "sass --watch src/app.scss:app.css --no-source-map",
+    "build": "electron-builder --dir",
+    "dist": "electron-builder --publish never"
   },
   "author": "Josh Chaiken contact@scatteredbrain.io",
   "license": "MIT",
   "devDependencies": {
     "electron": "^29.0.0",
+    "electron-builder": "^26.0.12",
+    "electron-icon-builder": "^2.0.1",
     "sass": "^1.89.0"
   },
   "dependencies": {
     "archiver": "^6.0.0",
     "node-unrar-js": "^2.0.2"
+  },
+  "build": {
+    "appId": "com.scatteredbrain.comicbookconverter",
+    "productName": "Comic Book Converter",
+    "directories": {
+      "output": "release"
+    }
+  },
+  "extraResources": [],
+  "mac": {
+    "target": [
+      "dmg",
+      "zip"
+    ],
+    "icon": "src/icons/mac/icon.icns"
+  },
+  "win": {
+    "target": [
+      "nsis",
+      "zip"
+    ],
+    "signAndEditExecutable": true,
+    "icon": "src/icons/win/icon.ico"
+  },
+  "linux": {
+    "target": [
+      "AppImage",
+      "zip"
+    ],
+    "icon": "src/icons/png/1024x1024.png"
   }
 }
