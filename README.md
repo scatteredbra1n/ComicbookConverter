@@ -1,16 +1,44 @@
 # Comic Book Converter
 
-While exploring color eink and attempting to find a perfect tablet for reading digital comic books, I found a gap in utilities.
+![App Icon](build/icon.png)
 
-When playing around with Kobo Clara Colour, I noticed most of my CBR comic book files did not work on the device.
+**ComicBookConverter** is a sleek and simple Electron app for converting comic book archives (`.CBR`, `.CBZ`) into `.CBZ` files. Built for Windows, macOS, and Linux.
 
-When I tried to convert the file to CBZ, it started working!
+---
 
-If I am running into this problem, it's possible that this is something someone else might want to do as well.
+## Features
 
-So here's the app!
+- 🔄 Converts `.CBR` to `.CBZ`
+- 🌗 Automatically applies system dark/light theme
+- 🧰 Cross-platform application
+
+---
+
+## Download the app
+
+The app is pre-built and ready to use. 
+
+These links will always be up to date with the latest available public version of the app.
+
+|Platform|Link|
+|--------|----|
+|macOS|Coming Soon|
+|Windows|Coming Soon|
+|Linux|Coming Soon|
+
+## Contributing
+
+### Installation
+
+```bash
+git clone https://github.com/your-username/ComicBookConverter.git
+cd ComicBookConverter
+npm install
+npm run start
+```
 
 ## Credits
+
 | | |
 |-|-|
 |CSS Loading Spinner|https://cssloaders.github.io/|
