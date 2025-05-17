@@ -11,7 +11,8 @@ If I am running into this problem, it's possible that this is something someone 
 So here's the app!
 
 ## Credits
-
-CSS Loading Spinner: https://cssloaders.github.io/
-CSS File Icons: https://picturepan2.github.io/fileicon.css/
-CSS Checkarmk: https://bbbootstrap.com/snippets/animated-checkmark-50934051
+| | |
+|-|-|
+|CSS Loading Spinner|https://cssloaders.github.io/|
+|CSS File Icons|https://picturepan2.github.io/fileicon.css/|
+|CSS Checkarmk|https://bbbootstrap.com/snippets/animated-checkmark-50934051|
