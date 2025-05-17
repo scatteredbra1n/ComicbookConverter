@@ -4,6 +4,8 @@ const fs = require('fs');
 const { createExtractorFromData } = require('node-unrar-js');
 const pdfPoppler = require('pdf-poppler');
 const os = require('os');
+const unzipper = require('unzipper');
+const fg = require('fast-glob');
 const archiver = require('archiver');
 
 const isMac = process.platform === 'darwin';
@@ -60,7 +62,7 @@ ipcMain.handle('validate-cbrs', async (event, filePaths) => {
   const validFiles = filePaths.filter(filePath => {
     const ext = path.extname(filePath).toLowerCase();
 
-    if (ext === '.pdf' || ext === '.cbz') {
+    if (ext === '.pdf' || ext === '.cbz' || ext === '.epub') {
       return true;
     }
 
@@ -117,6 +119,44 @@ async function convertPDFtoCBZ(pdfPath, outputCbzPath) {
 
   fs.rmSync(tempDir, { recursive: true, force: true });
 }
+
+async function convertEPUBtoCBZ(epubPath, outputCbzPath) {
+  const tempDir = path.join(os.tmpdir(), `epub_to_cbz_${Date.now()}`);
+  fs.mkdirSync(tempDir, { recursive: true });
+
+  // Step 1: unzip EPUB
+  await fs.createReadStream(epubPath)
+    .pipe(unzipper.Extract({ path: tempDir }))
+    .promise();
+
+  // Step 2: find images (jpg/png/gif/webp/etc.)
+  const imagePaths = await fg(['**/*.jpg', '**/*.jpeg', '**/*.png', '**/*.webp', '**/*.gif'], {
+    cwd: tempDir,
+    onlyFiles: true,
+    absolute: true
+  });
+
+  if (imagePaths.length === 0) {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+      throw new Error('No images found in EPUB.');
+  }
+
+  // Step 3: package into CBZ
+  const output = fs.createWriteStream(outputCbzPath);
+  const archive = archiver('zip', { zlib: { level: 9 } });
+
+  archive.pipe(output);
+
+  imagePaths
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+    .forEach((imgPath, index) => {
+      archive.file(imgPath, { name: `${String(index).padStart(3, '0')}${path.extname(imgPath)}` });
+  });
+  await archive.finalize();
+
+  fs.rmSync(tempDir, { recursive: true, force: true });
+}
+
 let hasErrors = false;
 
 ipcMain.on('convert-files', async (event, { files, outputDir }) => {
@@ -129,6 +169,9 @@ ipcMain.on('convert-files', async (event, { files, outputDir }) => {
       if (ext === '.pdf') {
         const outputFile = path.join(outputDir, `${path.basename(filePath, '.pdf')}.cbz`);
         await convertPDFtoCBZ(filePath, outputFile);
+      } else if (ext === '.epub') {
+        const outputFile = path.join(outputDir, `${path.basename(filePath, '.epub')}.cbz`);
+        await convertEPUBtoCBZ(filePath, outputFile);
       } else {
         const data = fs.readFileSync(filePath);
         const extractor = await createExtractorFromData({ data: new Uint8Array(data) });

@@ -24,8 +24,10 @@
   },
   "dependencies": {
     "archiver": "^6.0.2",
+    "fast-glob": "^3.3.3",
     "node-unrar-js": "^2.0.2",
-    "pdf-poppler": "^0.2.1"
+    "pdf-poppler": "^0.2.1",
+    "unzipper": "^0.12.3"
   },
   "build": {
     "appId": "com.scatteredbrain.comicbookconverter",
