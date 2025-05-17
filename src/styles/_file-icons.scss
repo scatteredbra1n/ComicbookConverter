@@ -44,3 +44,44 @@
 .file-icon[data-type="cbz"] {
   background: var(--file-type-2);
 }
+.file-icon[data-type="pdf"] {
+  background: var(--file-type-4);
+}
+.file-icon[data-type="epub"] {
+  background: var(--file-type-9);
+  &::after {
+    color: #000;
+  }
+}
+
+.slideshow {
+  position: relative;
+  width: 28px;
+  height: 15px;
+}
+
+.slideshow .file-icon {
+  position: absolute;
+  opacity: 0;
+  animation: fade 6s infinite;
+}
+
+/* Each icon starts its fade at a different time */
+.file-icon:nth-child(1) {
+  animation-delay: 0s;
+}
+.file-icon:nth-child(2) {
+  animation-delay: 2s;
+}
+.file-icon:nth-child(3) {
+  animation-delay: 4s;
+}
+
+/* Animation keyframes */
+@keyframes fade {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  30%  { opacity: 1; }
+  40%  { opacity: 0; }
+  100% { opacity: 0; }
+}
