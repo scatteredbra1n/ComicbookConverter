@@ -5,6 +5,22 @@
     const progress = document.getElementById('progress');
     let validFiles = [];
 
+    document.getElementsByClassName("titlebar")[0].addEventListener("click", toolbarActions);
+
+    function toolbarActions(event) {
+      const element = event.target;
+      if (element && (element.parentElement?.id === "btnMinimize" || element.id === "btnMinimize")) {
+        window.api.minimizeWindow();
+      }
+      if (element && (element.parentElement?.id === "btnMaximize" || element.id === "btnMaximize")) {
+        window.api.toggleMaximizeWindow();
+      }
+      if (element && (element.parentElement?.id === "btnClose" || element.id === "btnClose")) {
+        window.api.closeWindow();
+      }
+    }
+    
+
     dropZone.addEventListener('dragover', (e) => {
       e.preventDefault();
       dropZone.style.borderColor = '#00f';

@@ -4,20 +4,51 @@ const fs = require('fs');
 const { createExtractorFromData } = require('node-unrar-js');
 const archiver = require('archiver');
 
+let win; 
 function createWindow() {
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 800,
     height: 600,
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 10, y: 11 },
+    resizable: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
+      nodeIntegration: true
     }
   });
 
-  win.loadFile('index.html');
+  win.loadFile('./index.html');
 }
 
 app.whenReady().then(createWindow);
+
+ipcMain.handle('get-os', () => {
+    return process.platform;
+  });
+
+ipcMain.on('minimize-window', () => {
+    if (win) {
+      win.minimize();
+    }
+  });
+  
+  ipcMain.on('toggle-maximize-window', () => {
+    if (win) {
+      if (win.isMaximized()) {
+        win.unmaximize();
+      } else {
+        win.maximize();
+      }
+    }
+  });
+  
+  ipcMain.on('close-window', () => {
+    if (win) {
+      win.close();
+    }
+  });
 
 ipcMain.handle('validate-cbrs', async (event, filePaths) => {
   const validFiles = filePaths.filter(filePath => {

@@ -1,6 +1,10 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
+  minimizeWindow: () => ipcRenderer.send('minimize-window'),
+  toggleMaximizeWindow: () => ipcRenderer.send('toggle-maximize-window'),
+  closeWindow: () => ipcRenderer.send('close-window'),
+  getOS: () => ipcRenderer.invoke('get-os'),
   validateCBRs: (filePaths) => ipcRenderer.invoke('validate-cbrs', filePaths),
   selectOutputFolder: () => ipcRenderer.invoke('select-output-folder'),
   convertFiles: (payload) => ipcRenderer.send('convert-files', payload),
