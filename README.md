@@ -1,6 +1,6 @@
 # Comic Book Converter
 
-![App Icon](build/icon.png)
+![App Icon](build/icons/png/256x256.png)
 
 **ComicBookConverter** is a sleek and simple Electron app for converting comic book archives (`.CBR`, `.CBZ`) into `.CBZ` files. Built for Windows, macOS, and Linux.
 
