@@ -2,6 +2,8 @@ const { app, BrowserWindow, ipcMain, dialog, Notification } = require('electron'
 const path = require('path');
 const fs = require('fs');
 const { createExtractorFromData } = require('node-unrar-js');
+const pdfPoppler = require('pdf-poppler');
+const os = require('os');
 const archiver = require('archiver');
 
 const isMac = process.platform === 'darwin';
@@ -56,11 +58,21 @@ ipcMain.on('minimize-window', () => {
 
 ipcMain.handle('validate-cbrs', async (event, filePaths) => {
   const validFiles = filePaths.filter(filePath => {
-    if (path.extname(filePath).toLowerCase() !== '.cbr') return false;
-    const buffer = fs.readFileSync(filePath);
-    const sig = buffer.slice(0, 8).toString('hex');
-    return sig.startsWith('526172211a0700'); // RAR4
+    const ext = path.extname(filePath).toLowerCase();
+
+    if (ext === '.pdf' || ext === '.cbz') {
+      return true;
+    }
+
+    if (ext === '.cbr') {
+      const buffer = fs.readFileSync(filePath);
+      const sig = buffer.slice(0, 8).toString('hex');
+      return sig.startsWith('526172211a0700'); // RAR4
+    }
+
+    return false;
   });
+
   return validFiles.map(filePath => ({
     fullPath: filePath,
     fileName: path.basename(filePath)
@@ -78,37 +90,74 @@ function sendNotification(title, body) {
   new Notification({ title, body }).show();
 }
 
+async function convertPDFtoCBZ(pdfPath, outputCbzPath) {
+  const tempDir = path.join(os.tmpdir(), `pdf_to_cbz_${Date.now()}`);
+  fs.mkdirSync(tempDir, { recursive: true });
+
+  const opts = {
+    format: 'jpeg',
+    out_dir: tempDir,
+    out_prefix: 'page',
+    page: null
+  };
+
+  try {
+    await pdfPoppler.convert(pdfPath, opts);
+  } catch (err) {
+    throw new Error('PDF conversion failed: ' + err.message);
+  }
+
+  const output = fs.createWriteStream(outputCbzPath);
+  const archive = archiver('zip', { zlib: { level: 9 } });
+
+  archive.pipe(output);
+  archive.directory(tempDir, false);
+
+  await archive.finalize();
+
+  fs.rmSync(tempDir, { recursive: true, force: true });
+}
 let hasErrors = false;
+
 ipcMain.on('convert-files', async (event, { files, outputDir }) => {
   for (let i = 0; i < files.length; i++) {
     const filePath = files[i].fullPath;
+    const ext = path.extname(filePath).toLowerCase();
     event.sender.send('file-status', { index: i, status: 'Processing' });
 
     try {
-      const data = fs.readFileSync(filePath);
-      const extractor = await createExtractorFromData({ data: new Uint8Array(data) });
-      const extracted = extractor.extract({});
+      if (ext === '.pdf') {
+        const outputFile = path.join(outputDir, `${path.basename(filePath, '.pdf')}.cbz`);
+        await convertPDFtoCBZ(filePath, outputFile);
+      } else {
+        const data = fs.readFileSync(filePath);
+        const extractor = await createExtractorFromData({ data: new Uint8Array(data) });
+        const extracted = extractor.extract({});
 
-      const outputFile = path.join(outputDir, `${path.basename(filePath, '.cbr')}.cbz`);
-      const output = fs.createWriteStream(outputFile);
-      const zip = archiver('zip', { zlib: { level: 9 } });
-      zip.pipe(output);
+        const outputFile = path.join(outputDir, `${path.basename(filePath, ext)}.cbz`);
+        const output = fs.createWriteStream(outputFile);
+        const zip = archiver('zip', { zlib: { level: 9 } });
+        zip.pipe(output);
 
-      for (const file of extracted.files) {
-        if (!file.fileHeader.flags.directory && file.extraction) {
-          zip.append(Buffer.from(file.extraction), { name: file.fileHeader.name });
+        for (const file of extracted.files) {
+          if (!file.fileHeader.flags.directory && file.extraction) {
+            zip.append(Buffer.from(file.extraction), { name: file.fileHeader.name });
+          }
         }
+
+        await zip.finalize();
       }
 
-      await zip.finalize();
       event.sender.send('file-status', { index: i, status: 'Done' });
     } catch (error) {
       event.sender.send('file-status', { index: i, status: 'Error' });
+      console.error(error);
       hasErrors = true;
     }
 
     event.sender.send('conversion-progress', Math.round(((i + 1) / files.length) * 100));
   }
+
   !hasErrors && event.sender.send('conversion-complete');
   hasErrors && event.sender.send('conversion-errors');
 });

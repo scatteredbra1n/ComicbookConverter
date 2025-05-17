@@ -23,8 +23,9 @@
     "sass": "^1.89.0"
   },
   "dependencies": {
-    "archiver": "^6.0.0",
-    "node-unrar-js": "^2.0.2"
+    "archiver": "^6.0.2",
+    "node-unrar-js": "^2.0.2",
+    "pdf-poppler": "^0.2.1"
   },
   "build": {
     "appId": "com.scatteredbrain.comicbookconverter",
