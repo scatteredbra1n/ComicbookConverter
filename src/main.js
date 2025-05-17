@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { createExtractorFromData } = require('node-unrar-js');
@@ -74,6 +74,11 @@ ipcMain.handle('select-output-folder', async () => {
   return result.canceled ? null : result.filePaths[0];
 });
 
+function sendNotification(title, body) {
+  new Notification({ title, body }).show();
+}
+
+let hasErrors = false;
 ipcMain.on('convert-files', async (event, { files, outputDir }) => {
   for (let i = 0; i < files.length; i++) {
     const filePath = files[i].fullPath;
@@ -99,10 +104,15 @@ ipcMain.on('convert-files', async (event, { files, outputDir }) => {
       event.sender.send('file-status', { index: i, status: 'Done' });
     } catch (error) {
       event.sender.send('file-status', { index: i, status: 'Error' });
+      hasErrors = true;
     }
 
     event.sender.send('conversion-progress', Math.round(((i + 1) / files.length) * 100));
   }
+  !hasErrors && event.sender.send('conversion-complete');
+  hasErrors && event.sender.send('conversion-errors');
+});
 
-  event.sender.send('conversion-complete');
+ipcMain.on('show-notification', (_event, { title, body }) => {
+  new Notification({ title, body }).show();
 });

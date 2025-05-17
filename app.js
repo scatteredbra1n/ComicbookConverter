@@ -7,6 +7,9 @@
 
     document.getElementsByClassName("titlebar")[0].addEventListener("click", toolbarActions);
 
+    window.api.notify('Conversion Finished', 'Your comics were converted successfully!');
+
+
     function toolbarActions(event) {
       const element = event.target;
       if (element && (element.parentElement?.id === "btnMinimize" || element.id === "btnMinimize")) {
@@ -83,6 +86,13 @@
 
     window.api.onComplete(() => {
       progress.textContent = '✅ Conversion complete!';
+      window.api.notify('Comic Book Converter', 'Conversion process has completed.');
+      document.querySelector("#reset-btn").textContent = "Convert more";
+    });
+
+    window.api.onConversionErrors(() => {
+      progress.textContent = '❌ Conversion failed!';
+      window.api.notify('Comic Book Converter', 'Conversion process has completed,but encountered errors.');
       document.querySelector("#reset-btn").textContent = "Convert more";
     });
 
