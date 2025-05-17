@@ -1,0 +1,299 @@
+@charset "UTF-8";
+:root {
+  --background-color: #f6f6f6;
+  --text-color: #171717;
+  --border-color: #767676;
+  --container-color: #ffffff;
+  --spinner-background-color: #e6e6e6;
+  --file-type-1: #acacac;
+  --file-type-2: #307cf1;
+  --file-type-3: #0f9d58;
+  --file-type-4: #d24726;
+  --file-type-5: #e13d34;
+  --file-type-6: #5eb533;
+  --file-type-7: #8e44ad;
+  --file-type-8: #7a3ce7;
+  --file-type-9: #f4b400;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #000;
+    --text-color: #e6e6ed;
+    --border-color: #676767;
+    --container-color: #242424;
+    --file-type-1: #cfcfcf;
+    /* Neutral gray – slightly lighter for dark mode */
+    --file-type-2: #539dff;
+    /* Blue – brighter and softer for contrast */
+    --file-type-3: #34e28a;
+    /* Green – more neon-like to stand out */
+    --file-type-4: #ff6b4a;
+    /* Burnt orange – more vivid */
+    --file-type-5: #ff5c5c;
+    /* Red – brighter to avoid blending into dark */
+    --file-type-6: #a8e84e;
+    /* Lime green – vibrant on dark */
+    --file-type-7: #be7efc;
+    /* Purple – softened and more readable */
+    --file-type-8: #a68bff;
+    /* Violet – muted but still bold */
+    --file-type-9: #ffd54f;
+    /* Yellow – warm and not too bright */
+  }
+}
+/*****
+SPINNER ANIMATION
+******/
+.loader {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--container-color);
+  border-bottom-color: var(--file-type-7);
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.checkmark__circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 2;
+  stroke-miterlimit: 10;
+  stroke: #7ac142;
+  fill: none;
+  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 2;
+  stroke: #fff;
+  stroke-miterlimit: 10;
+  margin: 10% auto;
+  box-shadow: inset 0px 0px 0px #7ac142;
+  animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+}
+
+.checkmark__check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes scale {
+  0%, 100% {
+    transform: none;
+  }
+  50% {
+    transform: scale3d(1.1, 1.1, 1);
+  }
+}
+@keyframes fill {
+  100% {
+    box-shadow: inset 0px 0px 0px 30px #7ac142;
+  }
+}
+/****
+ICONS
+*****/
+.file-icon {
+  font-family: Arial, Tahoma, sans-serif;
+  font-weight: 300;
+  display: inline-block;
+  width: 24px;
+  height: 32px;
+  background: var(--file-type-7);
+  position: relative;
+  border-radius: 2px;
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+}
+
+.file-icon::before {
+  display: block;
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-bottom-left-radius: 2px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: var(--container-color) var(--container-color) rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.35);
+}
+
+.file-icon::after {
+  display: block;
+  content: attr(data-type);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  font-size: 10px;
+  color: #fff;
+  text-transform: lowercase;
+  width: 100%;
+  padding: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.file-icon[data-type=cbr] {
+  background: var(--file-type-8);
+}
+
+.file-icon[data-type=cbz] {
+  background: var(--file-type-2);
+}
+
+*,
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  color: var(--text-color);
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-color);
+  height: 100vh;
+  width: 100vw;
+}
+
+.btn {
+  cursor: pointer;
+  appearance: none;
+  border: 0;
+  background: var(--container-color);
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 120px;
+  max-width: 120px;
+}
+.btn.btn-secondary {
+  background: transparent;
+  border: none;
+}
+
+.btn-group {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  max-height: 400px;
+  max-width: 1200px;
+  min-height: 400px;
+  max-width: 700px;
+}
+.container .wrapper {
+  display: flex;
+  flex-direction: column;
+}
+.container .drag-and-drop {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  user-select: none;
+  height: 167px;
+  width: 500px;
+  padding: 24px 0;
+  border: 4px dashed var(--border-color);
+  background: var(--container-color);
+  border-radius: 12px;
+}
+.container .drag-and-drop.action-dragover {
+  border-color: #000;
+}
+.container .drag-and-drop.hidden {
+  display: none;
+}
+.container .drag-and-drop .drag-and-drop-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  flex-basis: 100%;
+  margin-bottom: 12px;
+}
+.container .drag-and-drop .illustration {
+  display: flex;
+  margin-bottom: 8px;
+}
+.container .drag-and-drop .illustration svg path {
+  stroke: var(--text-color);
+}
+.container .drag-and-drop .title {
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.container .drag-and-drop .description {
+  font-weight: 300;
+  font-size: 12px;
+}
+.container .step-2 {
+  width: 100%;
+}
+.container .file-list table {
+  border-collapse: collapse;
+  min-height: 167px;
+  width: 500px;
+  border-spacing: 0;
+}
+.container .file-list table thead {
+  height: 1px;
+}
+.container .file-list table th,
+.container .file-list table td {
+  padding: 12px;
+}
+.container .file-list table .loader {
+  margin: 0 auto;
+}
+
+.status-heading {
+  width: 36px;
+}
+
+.status {
+  display: flex;
+  justify-self: center;
+}
+
+#progress {
+  display: none;
+}
