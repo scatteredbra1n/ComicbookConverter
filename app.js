@@ -51,12 +51,22 @@
       convertBtn.disabled = validFiles.length === 0;
 
       if (validFiles.length > 0) {
-        let html = `<table><thead><tr><th class="status-heading" aria-label="Status"></th><th aria-label="File name"></th></tr></thead><tbody>`;
+        let html = `<table><thead><tr><th class="status-heading" aria-label="Status"></th><th aria-label="File name"></th><th aria-label="Output format"></th></tr></thead><tbody>`;
         for (let i = 0; i < validFiles.length; i++) {
           const fileName = validFiles[i].fileName;
           console.log(fileName);
           //const fileName = filePath.split(/[\\/]/).pop();
-          html += `<tr data-index="${i}"><td class="status"><span class="loader" style="opacity: 0;"></span></td><td>${fileName}</td></tr>`;
+          // html += `<tr data-index="${i}"><td class="status"><span class="loader" style="opacity: 0;"></span></td><td>${fileName}</td></tr>`;
+          html += `<tr data-index="${i}">
+            <td class="status"><span class="loader" style="opacity: 0;"></span></td>
+            <td>${fileName}</td>
+            <td>
+              <select class="format-select">
+                <option value="cbz">CBZ</option>
+                <option value="epub">EPUB</option>
+              </select>
+            </td>
+          </tr>`;
         }
         html += `</tbody></table>`;
         fileList.innerHTML = html;
@@ -73,7 +83,14 @@
       if (!outputDir) return;
       convertBtn.disabled = true;
       progress.textContent = 'Starting conversion...';
-      window.api.convertFiles({ files: validFiles, outputDir });
+
+      const rows = document.querySelectorAll("#file-list tbody tr");
+      const filesWithFormats = validFiles.map((file, i) => {
+        const format = rows[i].querySelector(".format-select").value;
+        return { ...file, outputFormat: format };
+      });
+
+      window.api.convertFiles({ files: filesWithFormats, outputDir });
     });
 
     resetBtn.addEventListener('click', async() => {

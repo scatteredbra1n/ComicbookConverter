@@ -7,6 +7,8 @@ const os = require('os');
 const unzipper = require('unzipper');
 const fg = require('fast-glob');
 const archiver = require('archiver');
+const { create } = require("xmlbuilder2");
+const JSZip = require("jszip");
 
 const isMac = process.platform === 'darwin';
 let win; 
@@ -92,6 +94,72 @@ function sendNotification(title, body) {
   new Notification({ title, body }).show();
 }
 
+async function convertToEPUB(images, title, outputPath) {
+  const zip = new JSZip();
+
+  // Add mimetype (must be first and uncompressed)
+  zip.file("mimetype", "application/epub+zip", { compression: "STORE" });
+
+  // Add container.xml
+  zip.folder("META-INF").file(
+    "container.xml",
+    `<?xml version="1.0"?>
+    <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+      <rootfiles>
+        <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
+      </rootfiles>
+    </container>`
+  );
+
+  // Add images
+  const imageNames = [];
+  const imagesFolder = zip.folder("OEBPS").folder("images");
+  for (let i = 0; i < images.length; i++) {
+    const name = `${String(i).padStart(3, "0")}${path.extname(images[i])}`;
+    imageNames.push(name);
+    const imgData = fs.readFileSync(images[i]);
+    imagesFolder.file(name, imgData);
+  }
+
+  // Add HTML page
+  const html = `
+    <html xmlns="http://www.w3.org/1999/xhtml">
+      <head><title>${title}</title></head>
+      <body style="margin:0;padding:0;background:black;">
+        ${imageNames.map(name => `<img src="images/${name}" style="width:100%;height:auto;display:block;" />`).join("")}
+      </body>
+    </html>
+  `;
+  zip.folder("OEBPS").file("index.xhtml", html);
+
+  // Add OPF (metadata)
+  const opf = create({ version: "1.0", encoding: "UTF-8" })
+    .ele("package", {
+      xmlns: "http://www.idpf.org/2007/opf",
+      version: "2.0",
+      "unique-identifier": "BookId"
+    })
+    .ele("metadata", { "xmlns:dc": "http://purl.org/dc/elements/1.1/" })
+    .ele("dc:title").txt(title).up()
+    .ele("dc:identifier", { id: "BookId" }).txt("urn:uuid:" + Date.now()).up()
+    .ele("dc:language").txt("en").up()
+    .up()
+    .ele("manifest")
+    .ele("item", { id: "index", href: "index.xhtml", "media-type": "application/xhtml+xml" }).up()
+    .ele("item", { id: "cover", href: "images/" + imageNames[0], "media-type": "image/jpeg" }).up()
+    .up()
+    .ele("spine")
+    .ele("itemref", { idref: "index" }).up()
+    .up()
+    .doc()
+    .end({ prettyPrint: true });
+
+  zip.folder("OEBPS").file("content.opf", opf);
+
+  const content = await zip.generateAsync({ type: "nodebuffer", mimeType: "application/epub+zip" });
+  fs.writeFileSync(outputPath, content);
+}
+
 async function convertPDFtoCBZ(pdfPath, outputCbzPath) {
   const tempDir = path.join(os.tmpdir(), `pdf_to_cbz_${Date.now()}`);
   fs.mkdirSync(tempDir, { recursive: true });
@@ -161,34 +229,81 @@ let hasErrors = false;
 
 ipcMain.on('convert-files', async (event, { files, outputDir }) => {
   for (let i = 0; i < files.length; i++) {
-    const filePath = files[i].fullPath;
+    const { fullPath: filePath, outputFormat } = files[i];
     const ext = path.extname(filePath).toLowerCase();
     event.sender.send('file-status', { index: i, status: 'Processing' });
 
     try {
-      if (ext === '.pdf') {
-        const outputFile = path.join(outputDir, `${path.basename(filePath, '.pdf')}.cbz`);
-        await convertPDFtoCBZ(filePath, outputFile);
-      } else if (ext === '.epub') {
-        const outputFile = path.join(outputDir, `${path.basename(filePath, '.epub')}.cbz`);
-        await convertEPUBtoCBZ(filePath, outputFile);
-      } else {
-        const data = fs.readFileSync(filePath);
-        const extractor = await createExtractorFromData({ data: new Uint8Array(data) });
-        const extracted = extractor.extract({});
+      const fileName = path.basename(filePath, ext);
+      const outputFile = path.join(outputDir, `${fileName}.${outputFormat}`);
 
-        const outputFile = path.join(outputDir, `${path.basename(filePath, ext)}.cbz`);
-        const output = fs.createWriteStream(outputFile);
-        const zip = archiver('zip', { zlib: { level: 9 } });
-        zip.pipe(output);
-
-        for (const file of extracted.files) {
-          if (!file.fileHeader.flags.directory && file.extraction) {
-            zip.append(Buffer.from(file.extraction), { name: file.fileHeader.name });
+      if (outputFormat === 'cbz') {
+        // Use existing logic
+        if (ext === '.pdf') {
+          await convertPDFtoCBZ(filePath, outputFile);
+        } else if (ext === '.epub') {
+          await convertEPUBtoCBZ(filePath, outputFile);
+        } else {
+          const data = fs.readFileSync(filePath);
+          const extractor = await createExtractorFromData({ data: new Uint8Array(data) });
+          const extracted = extractor.extract({});
+          const output = fs.createWriteStream(outputFile);
+          const zip = archiver('zip', { zlib: { level: 9 } });
+          zip.pipe(output);
+          for (const file of extracted.files) {
+            if (!file.fileHeader.flags.directory && file.extraction) {
+              zip.append(Buffer.from(file.extraction), { name: file.fileHeader.name });
+            }
           }
+          await zip.finalize();
+        }
+      } else if (outputFormat === 'epub') {
+        const tempDir = path.join(os.tmpdir(), `to_epub_${Date.now()}`);
+        fs.mkdirSync(tempDir, { recursive: true });
+
+        let imagePaths = [];
+
+        if (ext === '.cbz' || ext === '.epub') {
+          await fs.createReadStream(filePath)
+            .pipe(unzipper.Extract({ path: tempDir }))
+            .promise();
+
+          imagePaths = await fg(['**/*.{jpg,jpeg,png,gif,webp}'], {
+            cwd: tempDir,
+            onlyFiles: true,
+            absolute: true
+          });
+
+        } else if (ext === '.cbr') {
+          const data = fs.readFileSync(filePath);
+          const extractor = await createExtractorFromData({ data: new Uint8Array(data) });
+          const extracted = extractor.extract({});
+
+          for (const file of extracted.files) {
+            if (!file.fileHeader.flags.directory && file.extraction) {
+              const outPath = path.join(tempDir, file.fileHeader.name);
+              fs.mkdirSync(path.dirname(outPath), { recursive: true });
+              fs.writeFileSync(outPath, Buffer.from(file.extraction));
+            }
+          }
+
+          imagePaths = await fg(['**/*.{jpg,jpeg,png,gif,webp}'], {
+            cwd: tempDir,
+            onlyFiles: true,
+            absolute: true
+          });
+
+        } else {
+          throw new Error("EPUB export not supported for this file type.");
         }
 
-        await zip.finalize();
+        if (!imagePaths.length) {
+          fs.rmSync(tempDir, { recursive: true, force: true });
+          throw new Error("No images found for EPUB export.");
+        }
+
+        await convertToEPUB(imagePaths, fileName, outputFile);
+        fs.rmSync(tempDir, { recursive: true, force: true });
       }
 
       event.sender.send('file-status', { index: i, status: 'Done' });
