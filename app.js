@@ -64,6 +64,7 @@
               <select class="format-select">
                 <option value="cbz">CBZ</option>
                 <option value="epub">EPUB</option>
+                <option value="pdf">PDF</option>
               </select>
             </td>
           </tr>`;
